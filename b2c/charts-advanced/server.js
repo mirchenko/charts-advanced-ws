@@ -2,6 +2,8 @@ const _ = require('lodash');
 const crypto = require('crypto');
 const express = require('express');
 const app = express();
+const server = require('http').createServer(app);
+const io = require('socket.io')(server);
 
 const generateBlocks = require('./blocks');
 
@@ -20,77 +22,54 @@ const BLOCKS_INIT_CONFIG = {
 	delayMax: 10
 };
 
+
+const socketClients = [];
 const clients = {};
 
-function requestShouldFail() {
-	return _.random(0.0, 1.0, true) < SERVER_CONFIG.PROBABILITY_FAIL;
-}
-
-function initClient() {
+function initClient(socket) {
 	const clientKey = crypto.randomBytes(SERVER_CONFIG.CLIENT_KEY_SIZE).toString('hex');
 	clients[clientKey] = {
-		blocks: generateBlocks(BLOCKS_INIT_CONFIG),
+    socket,
+		blocks: generateBlocks(BLOCKS_INIT_CONFIG, socket),
 		lastAccessTime: Date.now()
 	};
 	return clientKey;
 }
 
 setInterval(function () {
-	const time = Date.now();
 	_.forEach(_.keys(clients), (clientKey) => {
 		const client = clients[clientKey];
-		if (time - client.lastAccessTime > SERVER_CONFIG.CLIENT_TTL) {
-			delete clients[clientKey];
-			return;
-		}
 		client.blocks.tick();
 	});
 }, SERVER_CONFIG.TICK);
 
+
 app.use(express.static('public'));
+app.get('/' , (req, res) => {
+  res.sendFile('/public/index.html')
+});
 
-app.get('/api/v1/init', function (req, res) {
-	const clientKey = initClient();
-	res.json({
-		clientKey: clientKey,
-		time: clients[clientKey].lastAccessTime,
-		stations: clients[clientKey].blocks.getBlocks()
+
+io.on('connection', socket => {
+  const clientKey = initClient(socket);
+  socketClients.push({ socketId: socket.conn.id, clientKey });
+  socket.emit('init', {
+    clientKey: clientKey,
+    time: clients[clientKey].lastAccessTime,
+    stations: clients[clientKey].blocks.getBlocks()
+  });
+
+  socket.on('disconnect', () => {
+    const socketClientIndex = _.findIndex(socketClients, item => item.socketId === socket.conn.id);
+    if(socketClientIndex >= 0) {
+      delete clients[socketClients[socketClientIndex].clientKey];
+      socketClients.splice(socketClientIndex, 1);
+		}
 	});
 });
 
-app.get('/api/v1/client/:clientKey/delta/:stationName/since/:time', function (req, res) {
-	if (requestShouldFail()) {
-		return res.status(500).send('Will be back after lunch.');
-	}
-	const clientKey = req.params.clientKey;
-	if (!clientKey) {
-		return res.json({error: `Client key cannot be empty.`});
-	}
-	const client = clients[clientKey];
-	if (!client) {
-		return res.json({error: `Client key "${clientKey}" not found.`});
-	}
-	client.lastAccessTime = Date.now();
-	const blockKey = req.params.stationName;
-	if (!blockKey) {
-		return res.json({error: `Station name cannot be empty.`});
-	}
-	const time = req.params.time;
-	if (!time) {
-		return res.json({error: `Time since latest update cannot be empty.`});
-	}
-	let delta = null;
-	try {
-		delta = client.blocks.getDelta(blockKey, time);
-	} catch (error) {
-		return res.json({error});
-	}
-	res.json({
-		time: client.lastAccessTime,
-		...delta
-	});
-});
 
-app.listen(SERVER_CONFIG.PORT, function () {
-	console.log(`listening on port ${SERVER_CONFIG.PORT}`);
+
+server.listen(SERVER_CONFIG.PORT, function () {
+  console.log(`listening on port ${SERVER_CONFIG.PORT}`);
 });

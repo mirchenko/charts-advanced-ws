@@ -1,0 +1,64 @@
+.stations-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  flex-wrap: wrap;
+
+  .station {
+    width: 280px;
+    margin: 16px;
+    padding: 8px;
+    box-shadow: 0 4px  8px 0 rgba(0,0,0, .099);
+    border: 1px solid #455A64;
+    background: #37474F;
+
+    .station-header {
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #eee;
+      padding: 8px 16px;
+      margin-bottom: 24px;
+
+      h2 {
+        margin: 0;
+        color: #F3E5F5;
+      }
+
+      span {
+        font-weight: 600;
+        color: #78e08f;
+
+        &.offline {
+          color: #e55039;
+        }
+      }
+    }
+
+    .station-body {
+      position: relative;
+
+      .station-error {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-around;
+        align-items: center;
+        background-color: rgba(244,67,54, .6);
+        color: #fff;
+
+        h4 {
+          margin: 0;
+        }
+      }
+    }
+
+
+  }
+}

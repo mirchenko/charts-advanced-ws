@@ -1,0 +1,98 @@
+.header {
+  padding: 16px;
+  margin-top: 24px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+
+  .filter-wrapper {
+    flex: 1 1 auto;
+    input {
+      height: 32px;
+      width: 100%;
+      border: 0;
+      outline: 0;
+      border-bottom: 1px solid #fff;
+      background: transparent;
+      color: #fff;
+    }
+  }
+
+  .controls-wrapper {
+    margin-left: 128px;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+
+    .controls-item {
+      margin-right: 8px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: center;
+
+      svg {
+        height: 24px;
+        width: 24px;
+
+        path {
+          fill: #546E7A;
+        }
+
+        polygon {
+          fill: #546E7A;
+        }
+      }
+
+      .controls-container {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        align-items: center;
+        height: 100%;
+        width: 20px;
+
+        > div {
+          width: 0;
+          height: 0;
+          border-style: solid;
+
+          &:first-child {
+            margin-bottom: 5px;
+            border-width: 0 4px 4px 4px;
+            border-color: transparent transparent #546E7A transparent;
+            &.active {
+              border-color: transparent transparent #9C27B0 transparent;
+            }
+          }
+
+          &:last-child {
+            margin-top: 5px;
+            border-width: 4px 4px 0 4px;
+            border-color: #546E7A transparent transparent transparent;
+            &.active {
+              border-color: #9C27B0 transparent transparent transparent;
+            }
+          }
+
+        }
+
+      }
+
+      &.active {
+        svg {
+          path {
+            fill: #9C27B0;
+          }
+
+          polygon {
+            fill: #9C27B0;
+          }
+        }
+      }
+    }
+  }
+}
